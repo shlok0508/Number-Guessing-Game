@@ -1,10 +1,7 @@
 import tkinter as tk
 import random
 
-
-# =========================
 # GAME VARIABLES
-# =========================
 
 secret_number = 0
 attempts = 0
@@ -13,10 +10,7 @@ current_min = 1
 current_max = 50
 game_over = False
 
-
-# =========================
 # COLORS
-# =========================
 
 BG = "#07152F"
 CARD = "#0D2145"
@@ -31,10 +25,7 @@ LIGHT_BLUE = "#B9D7FF"
 GRAY = "#7890B5"
 RED = "#EF4444"
 
-
-# =========================
 # CREATE WINDOW
-# =========================
 
 window = tk.Tk()
 
@@ -44,9 +35,8 @@ window.configure(bg=BG)
 window.resizable(False, False)
 
 
-# =========================
 # GAME FUNCTIONS
-# =========================
+
 
 def start_game(minimum, maximum):
     global secret_number, attempts, guess_history
@@ -124,41 +114,21 @@ def check_guess(event=None):
     history_label.config(text=history_text)
 
     # Compare guess
-    if guess < secret_number:
+    feedback = get_guess_feedback(guess)
 
-        result_label.config(
-            text="Too Low! ⬆️",
-            fg=BLUE
-        )
-
-        hint_label.config(
-            text="💡 Try a bigger number!"
-        )
-
-    elif guess > secret_number:
-
-        result_label.config(
-            text="Too High! ⬇️",
-            fg=PINK
-        )
-
-        hint_label.config(
-            text="💡 Try a smaller number!"
-        )
-
-    else:
-
+    if feedback["status"] == "correct":
         game_over = True
 
-        result_label.config(
-            text=f"🎉 You got it! The number was {secret_number}",
-            fg=GREEN
-        )
+    result_label.config(
+        text=feedback["message"],
+        fg=feedback["color"]
+    )
 
-        hint_label.config(
-            text=f"🏆 You found it in {attempts} attempts!"
-        )
+    hint_label.config(
+        text=feedback["hint"]
+    )
 
+    if feedback["status"] == "correct":
         guess_entry.config(state="disabled")
         guess_button.config(state="disabled")
 
@@ -169,30 +139,62 @@ def restart_game():
     start_game(current_min, current_max)
 
 
+def get_guess_feedback(guess):
+    """Return the game feedback for a guessed number."""
+    if guess < secret_number:
+        return {
+            "status": "low",
+            "message": "Too Low! ⬆️",
+            "color": BLUE,
+            "hint": "💡 Try a bigger number!"
+        }
+
+    if guess > secret_number:
+        return {
+            "status": "high",
+            "message": "Too High! ⬇️",
+            "color": PINK,
+            "hint": "💡 Try a smaller number!"
+        }
+
+    return {
+        "status": "correct",
+        "message": f"🎉 You got it! The number was {secret_number}",
+        "color": GREEN,
+        "hint": f"🏆 You found it in {attempts} attempts!"
+    }
+
+
+def reset_difficulty_buttons(active_level=None):
+    """Highlight the currently selected difficulty button."""
+    buttons = {
+        "easy": easy_button,
+        "medium": medium_button,
+        "hard": hard_button,
+    }
+
+    for button in buttons.values():
+        button.config(bg=CARD_2)
+
+    if active_level in buttons:
+        buttons[active_level].config(bg=GREEN)
+
+
 def choose_easy():
     start_game(1, 50)
-    easy_button.config(bg=GREEN)
-    medium_button.config(bg=CARD_2)
-    hard_button.config(bg=CARD_2)
+    reset_difficulty_buttons("easy")
 
 
 def choose_medium():
     start_game(1, 100)
-    easy_button.config(bg=CARD_2)
-    medium_button.config(bg=GREEN)
-    hard_button.config(bg=CARD_2)
+    reset_difficulty_buttons("medium")
 
 
 def choose_hard():
     start_game(1, 500)
-    easy_button.config(bg=CARD_2)
-    medium_button.config(bg=CARD_2)
-    hard_button.config(bg=GREEN)
+    reset_difficulty_buttons("hard")
 
-
-# =========================
 # TOP TITLE
-# =========================
 
 title_frame = tk.Frame(
     window,
@@ -235,9 +237,8 @@ subtitle_label = tk.Label(
 subtitle_label.pack(pady=(0, 20))
 
 
-# =========================
 # MAIN AREA
-# =========================
+
 
 main_frame = tk.Frame(
     window,
@@ -246,10 +247,8 @@ main_frame = tk.Frame(
 
 main_frame.pack()
 
-
-# =========================
 # LEFT SIDE
-# =========================
+
 
 left_frame = tk.Frame(
     main_frame,
@@ -427,9 +426,7 @@ history_label = tk.Label(
 history_label.pack(pady=5)
 
 
-# =========================
 # RIGHT SIDE
-# =========================
 
 right_frame = tk.Frame(
     main_frame,
@@ -511,9 +508,8 @@ message = tk.Label(
 message.pack()
 
 
-# =========================
 # RESTART BUTTON
-# =========================
+
 
 restart_button = tk.Button(
     window,
@@ -533,22 +529,21 @@ restart_button = tk.Button(
 restart_button.pack(pady=20)
 
 
-# =========================
 # ENTER KEY
-# =========================
+
 
 window.bind("<Return>", check_guess)
 
 
-# =========================
 # START GAME
-# =========================
+
 
 start_game(1, 50)
 
 
 # Put cursor inside input box
 guess_entry.focus()
+
 
 
 # Start program
